@@ -1,0 +1,43 @@
+/* Copyright (c) 2017 MIT 6.813/6.831 course staff, all rights reserved.
+ * Redistribution of original or derived work requires permission of course staff.
+ */
+
+#outerRow {
+  height: 750px;
+  display: flex;
+}
+
+h1 {
+text-align: center;
+text-transform: uppercase;
+}
+
+.btn {
+  background-color: gray;
+}
+
+.col-xs-3 {
+  border: 2px solid white;
+  width: 40px;
+  height: 40px;
+  border-style: outset;
+}
+
+.col-4 {
+  display: flex;
+}
+
+.arrow {
+  flex: auto;
+  background-color: gray;
+}
+
+#firstColumn {
+  color: red;
+  margin-right: 20px;
+}
+
+#mainColumn {
+  margin-right: 20px;
+}
+

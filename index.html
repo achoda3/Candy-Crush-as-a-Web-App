@@ -1,0 +1,411 @@
+<!--
+CandyCrush
+Your Name: Aryann Chodankar
+Collaborators: No one lol
+-->
+<!DOCTYPE html>
+<html>
+<!--
+/* Copyright (c) 2017 MIT 6.813/6.831 course staff, all rights reserved.
+ * Redistribution of original or derived work requires permission of course staff.
+ */
+-->
+
+<head>
+<meta charset="utf-8">
+<title>CandyCrush</title>
+
+<!-- Load style sheets -->
+<link rel="stylesheet" href=
+  "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.css">
+
+<link rel="stylesheet" href="mainLayout.css">
+
+<!-- Use mobile-aware viewport -->
+<meta name="viewport" content=
+  "width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Load any supplemental Javascript libraries here -->
+<script src=
+  "https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src=
+  "https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.2/seedrandom.js">
+</script>
+<script src="candy.js"></script>
+<script src="board.js"></script>
+<script src="rules.js"></script>
+
+<script>
+
+// By default, the first board loaded by your page will be the same 
+// each time you load (which is accomplished by "seeding" the random
+// number generator. This makes testing (and grading!) easier!
+Math.seedrandom(0);
+
+
+// A short jQuery extension to read query parameters from the URL.
+$.extend({
+  getUrlVars: function() {
+    var vars = [], pair;
+    var pairs = window.location.search.substr(1).split('&');
+    for (var i = 0; i < pairs.length; i++) {
+      pair = pairs[i].split('=');
+      vars.push(pair[0]);
+      vars[pair[0]] = pair[1] &&
+          decodeURIComponent(pair[1].replace(/\+/g, ' '));
+    }
+    return vars;
+  },
+  getUrlVar: function(name) {
+    return $.getUrlVars()[name];
+  }
+});
+
+// constants
+var DEFAULT_BOARD_SIZE = 8;
+
+// data model at global scope for easier debugging
+var board;
+var rules;
+
+// initialize board
+if ($.getUrlVar('size') && $.getUrlVar('size') >= 3) {
+  board = new Board($.getUrlVar('size'));
+} else {
+  board = new Board(DEFAULT_BOARD_SIZE);
+}
+
+// load a rule
+rules = new Rules(board);
+
+// Final initialization entry point: the Javascript code inside this block
+// runs at the end of start-up when the page has finished loading.
+$(document).ready(function()
+{
+  rules.prepareNewGame();
+  var container='';
+  var textColor;
+  for(let i=0 ; i<board.getSize(); i++){
+    container+='<div class="row justify-content-center">';
+    for(let j=0; j<board.getSize(); j++){
+      if(board.getCandyAt(i,j).toString()=="yellow"){
+        textColor="gray";
+      } else {
+        textColor="white";
+      }
+      container+='<div class="col-xs-3" id="'+String.fromCharCode(j+97)+(i+1)+'" style="background-color:'+board.getCandyAt(i,j).toString()+'; color: '+textColor+'">'+String.fromCharCode(j+97)+(i+1)+'</div>';
+    }
+    container+='</div>';
+  }
+  $('#mainColumn').append(container);
+});
+
+
+/* Event Handlers */
+// access the candy object with info.candy
+
+// add a candy to the board
+$(board).on('add', function(e, info)
+{
+  $('#'+String.fromCharCode(info.toCol+97)+(info.toRow+1)).css("background-color", info.candy.toString());
+  if(info.candy.toString()=="yellow"){
+    $('#'+String.fromCharCode(info.toCol+97)+(info.toRow+1)).css("color", "grey");
+  } else {
+    $('#'+String.fromCharCode(info.toCol+97)+(info.toRow+1)).css("color", "white");
+  }
+});
+
+// move a candy on the board
+$(board).on("move", function(evt, details){
+  //get color of candy at to Position
+  var toColor = board.getCandyAt(details.toRow, details.toCol).toString(); 
+  //Change the css properties of that block to reflect the changes of move 
+  $('#'+String.fromCharCode(details.toCol+97)+(details.toRow+1)).css("background-color", toColor);
+  if(toColor=="yellow"){
+    $('#'+String.fromCharCode(details.toCol+97)+(details.toRow+1)).css("color", "grey");
+  } else {
+    $('#'+String.fromCharCode(details.toCol+97)+(details.toRow+1)).css("color", "white");
+  }
+});
+
+// remove a candy from the board
+$(board).on('remove', function(e, info)
+{
+  // Grey out all properties of removed grid
+  //console.log(String.fromCharCode(info.fromCol+97)+(info.fromRow+1));
+  $('#'+String.fromCharCode(info.fromCol+97)+(info.fromRow+1)).css("background-color", "grey");
+  $('#'+String.fromCharCode(info.fromCol+97)+(info.fromRow+1)).css("color", "grey");
+});
+
+// move a candy on the board
+$(board).on('scoreUpdate', function(e, info)
+{
+  // Your code here. To be implemented in pset 2.
+});
+
+// Create a new Game
+$(document).on('click', "#NewGameButton", function(evt)
+{
+  board.clear();
+  rules.prepareNewGame();
+  var container='';
+  var textColor;
+  for(let i=0 ; i<board.getSize(); i++){
+    container+='<div class="row justify-content-center">';
+    for(let j=0; j<board.getSize(); j++){
+      if(board.getCandyAt(i,j).toString()=="yellow"){
+        textColor="gray";
+      } else {
+        textColor="white";
+      }
+      container+='<div class="col-xs-3" id="'+String.fromCharCode(j+97)+(i+1)+'" style="background-color:'+board.getCandyAt(i,j).toString()+'; color: '+textColor+'">'+String.fromCharCode(j+97)+(i+1)+'</div>';
+    }
+    container+='</div>';
+  }
+  $('#mainColumn').html('');
+  $('#mainColumn').append(container);
+});
+
+//function to Disable all Arrow keys
+function disableButtons(){
+  $("#Up").css("background-color", "grey");
+  $("#Left").css("background-color", "grey");
+  $("#Right").css("background-color", "grey");
+  $("#Down").css("background-color", "grey");
+  $("#Up").attr('disabled', 'disabled');
+  $("#Left").attr('disabled', 'disabled');
+  $("#Right").attr('disabled', 'disabled');
+  $("#Down").attr('disabled', 'disabled');
+}
+
+// Button Handler for Up
+$(document).on('click', "#Up", function(evt)
+{
+  // Get Text Input
+  var move = $("#MoveInput").val();
+  /* Debugging
+  console.log(move);
+  console.log(move.charCodeAt(0)-97);
+  console.log(move.charCodeAt(1)-49);
+  console.log(rules.isMoveTypeValid(board.getCandyAt(move.charCodeAt(0)-97,move.charCodeAt(1)-49), 'up'));
+  */
+ // Get candy at that position
+  var candy = board.getCandyAt(move.charCodeAt(1)-49,move.charCodeAt(0)-97);
+  // If Valid
+  if(rules.isMoveTypeValid(candy, 'up')){
+    //Flip candies in direction
+    board.flipCandies(candy, board.getCandyInDirection(candy, 'up'));
+  }
+  // Empty and focus the text field
+  $("#MoveInput").val("");
+  $("#MoveInput").focus();
+  // Disable buttons
+  disableButtons();
+  // Enable the Crush Once Button
+  $('#CrushOnce').removeAttr('disabled');
+});
+
+// Button Handler for Left
+$(document).on('click', "#Left", function(evt)
+{
+  // Similar steps to #Up
+  var move = $("#MoveInput").val();
+  /* Debugging
+  console.log(move);
+  console.log(move.charCodeAt(0)-97);
+  console.log(move.charCodeAt(1)-49);
+  console.log(rules.isMoveTypeValid(board.getCandyAt(move.charCodeAt(0)-97,move.charCodeAt(1)-49), 'left'));
+  */
+  var candy = board.getCandyAt(move.charCodeAt(1)-49,move.charCodeAt(0)-97);
+  if(rules.isMoveTypeValid(candy, 'left')){
+    board.flipCandies(candy, board.getCandyInDirection(candy, 'left'));
+  }
+  $("#MoveInput").val("");
+  $("#MoveInput").focus();
+  disableButtons();
+  $('#CrushOnce').removeAttr('disabled');
+});
+
+// Button Handler for Right
+$(document).on('click', "#Right", function(evt)
+{
+  // Similar steps to #Up
+  var move = $("#MoveInput").val();
+  /* Debugging
+  console.log(move);
+  console.log(move.charCodeAt(0)-97);
+  console.log(move.charCodeAt(1)-49);
+  console.log(rules.isMoveTypeValid(board.getCandyAt(move.charCodeAt(0)-97,move.charCodeAt(1)-49), 'right'));
+  */
+  var candy = board.getCandyAt(move.charCodeAt(1)-49,move.charCodeAt(0)-97);
+  if(rules.isMoveTypeValid(candy, 'right')){
+    board.flipCandies(candy, board.getCandyInDirection(candy, 'right'));
+  }
+  $("#MoveInput").val("");
+  $("#MoveInput").focus();
+  disableButtons();
+  $('#CrushOnce').removeAttr('disabled');
+});
+
+// Button handler for Down
+$(document).on('click', "#Down", function(evt)
+{
+  // Similar steps to #Up
+  var move = $("#MoveInput").val();
+  /* Debugging
+  console.log(move);
+  console.log(move.charCodeAt(0)-97);
+  console.log(move.charCodeAt(1)-49);
+  console.log(rules.isMoveTypeValid(board.getCandyAt(move.charCodeAt(0)-97,move.charCodeAt(1)-49), 'down'));
+  */
+  var candy = board.getCandyAt(move.charCodeAt(1)-49,move.charCodeAt(0)-97);
+  if(rules.isMoveTypeValid(candy, 'down')){
+    board.flipCandies(candy, board.getCandyInDirection(candy, 'down'));
+  }
+  $("#MoveInput").val("");
+  $("#MoveInput").focus();
+  disableButtons();
+  $('#CrushOnce').removeAttr('disabled');
+
+});
+
+// Button handler for Crush Once
+$(document).on('click', '#CrushOnce', function(evt)
+{
+  // Remove Crushes
+  rules.removeCrushes(rules.getCandyCrushes());
+  // Empty out the TextField to avoid input during transition
+  $("#MoveInput").val("");
+  // Disable the Crush Once button
+  $('#CrushOnce').attr('disabled', 'disabled');
+  // After set Time of 0.5 seconds, move the candies down, and if there are any more crushes, enable Crush Once again
+  setTimeout(function(){
+    rules.moveCandiesDown();
+    console.log(rules.getCandyCrushes());
+    if(rules.getCandyCrushes().length>0){
+      $('#CrushOnce').removeAttr('disabled');
+    }
+  }, 500);
+  
+});
+
+// keyboard events arrive here
+// When user lets go of any key, check if his input is valid or not for enabling the directions
+$(document).on('keyup', function(evt) {
+  // If Crush Once is enabled, disable all arrows and return
+  if($('#CrushOnce').is(':disabled')==false){
+    disableButtons();
+    return;
+  }
+  // Get Input
+  var curr=$("#MoveInput").val();
+  var valid=false;
+  if(curr.length==2){
+    if(curr.charCodeAt(0)>=97 && curr.charCodeAt(0)<=104 && curr.charCodeAt(1)>=49 && curr.charCodeAt(1)<=56){
+      valid=true;
+      var move = $("#MoveInput").val();
+      var candy = board.getCandyAt(move.charCodeAt(1)-49,move.charCodeAt(0)-97);
+      // console.log(move.charCodeAt(0)-97);
+      // console.log(move.charCodeAt(1)-49);
+      // console.log(candy.toString());
+      // Check for Validity in each direction
+      if(rules.isMoveTypeValid(candy, 'up')){
+        $("#Up").removeAttr('disabled');
+        $("#Up").css("background-color", "green");
+      } else {
+        $("#Up").css("background-color", "grey");
+        $("#Up").attr('disabled', 'disabled');
+      }
+      if(rules.isMoveTypeValid(candy, 'left')){
+        $("#Left").removeAttr('disabled');
+        $("#Left").css("background-color", "green");
+      } else {
+        $("#Left").css("background-color", "grey");
+        $("#Left").attr('disabled', 'disabled');
+      }
+      if(rules.isMoveTypeValid(candy, 'right')){
+        $("#Right").removeAttr('disabled');
+        $("#Right").css("background-color", "green");
+      } else {
+        $("#Right").css("background-color", "grey");
+        $("#Right").attr('disabled', 'disabled');
+      }
+      if(rules.isMoveTypeValid(candy, 'down')){
+        $("#Down").removeAttr('disabled');
+        $("#Down").css("background-color", "green");
+      } else {
+        $("#Down").css("background-color", "grey");
+        $("#Down").attr('disabled', 'disabled');
+      }
+    }
+  }
+  // If basic checks were not valid, disable all buttons
+  if(valid==false){
+    disableButtons();
+  }
+});
+
+</script>
+
+
+</head>
+
+<body>
+
+<div class="container">
+  <div class="row row-cols-3 bg-secondary justify-content-center" id="outerRow">
+    <div class="col-md-3 align-self-center" id="firstColumn">
+      <!-- Column 1 -->
+
+      <div class="row justify-content-center">
+        <div class="col-6 align-self-center">
+          <div class="h1 pb-3">
+            Candy Crush
+          </div>
+          <input class="btn" type="button" value="New Game" id="NewGameButton">
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-5 align-self-center" id="mainColumn">
+      <!-- Column 2 Code Here -->
+
+    </div>
+
+    <div class="col-md-3 align-self-center" id="lastColumn">
+      <!-- Column 3 Code Here -->
+
+      <div class="row justify-content-center"></div>
+      <label for="Move: ">Move</label>
+      <input type="text" id="MoveInput">
+      <div class="row">
+        <br>
+      </div>
+      <div class="row">
+        <div class="col-4"></div>
+        <div class="col-4"><input class="btn arrow" type="button" value="🡹" id="Up" disabled="disabled"></div>
+        <div class="col-4"></div>
+      </div>
+      <div class="row">
+        <div class="col-4"><input class="btn arrow" type="button" value="🡸" id="Left" disabled="disabled"></div>
+        <div class="col-4"></div>
+        <div class="col-4"><input class="btn arrow" type="button" value="🡺" id="Right" disabled="disabled"></div>
+      </div>
+      <div class="row">
+        <div class="col-4"></div>
+        <div class="col-4"><input class="btn arrow" type="button" value="🡻" id="Down" disabled="disabled"></div>
+        <div class="col-4"></div>
+      </div>
+      <div class="row">
+        <br>
+      </div>
+      <div class="row justify-content-center">
+        <div class="btn"><input class="btn" type="button" value="Crush Once" id="CrushOnce" disabled="disabled"></div>
+      </div>
+    </div>
+  </div> <!-- class="row" -->
+</div> <!-- class="container" -->
+
+</body>
+
+</html>
